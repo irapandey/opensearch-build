@@ -1,0 +1,74 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 984e1ea..05c4b1e 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -48,8 +48,8 @@ jobs:
+       - name: Build and Test
+         run: |
+           chown -R 1000:1000 `pwd`
+-          su `id -un 1000` -c "./gradlew build &&
+-                               ./gradlew publishToMavenLocal"
++          su `id -un 1000` -c "./gradlew --console=plain build &&
++                               ./gradlew --console=plain publishToMavenLocal"
+           
+       - name: Upload Coverage Report
+         uses: codecov/codecov-action@v1
+@@ -77,11 +77,11 @@ jobs:
+ 
+       - name: Build and Test
+         run: |
+-          ./gradlew build
++          ./gradlew --console=plain build
+ 
+       - name: Publish to Maven Local
+         run: |
+-          ./gradlew publishToMavenLocal
++          ./gradlew --console=plain publishToMavenLocal
+           
+       - name: Upload Coverage Report
+         uses: codecov/codecov-action@v1
+diff --git a/.github/workflows/maven-publish.yml b/.github/workflows/maven-publish.yml
+index 23dfe73..e7894da 100644
+--- a/.github/workflows/maven-publish.yml
++++ b/.github/workflows/maven-publish.yml
+@@ -43,4 +43,4 @@ jobs:
+ 
+       - name: publish snapshots to maven
+         run: |
+-          ./gradlew publishShadowPublicationToSnapshotsRepository
++          ./gradlew --console=plain publishShadowPublicationToSnapshotsRepository
+diff --git a/DEVELOPER_GUIDE.md b/DEVELOPER_GUIDE.md
+index 8975ecb..eb36fa3 100644
+--- a/DEVELOPER_GUIDE.md
++++ b/DEVELOPER_GUIDE.md
+@@ -25,9 +25,9 @@ OpenSearch components build using Java 21 at a minimum. This means you must have
+ To build from the command line, use `./gradlew`.
+ 
+ ```
+-./gradlew clean
+-./gradlew build
+-./gradlew publishToMavenLocal
++./gradlew --console=plain clean
++./gradlew --console=plain build
++./gradlew --console=plain publishToMavenLocal
+ ```
+ 
+ ### Using IntelliJ IDEA
+diff --git a/scripts/build.sh b/scripts/build.sh
+index e0495d4..139e648 100755
+--- a/scripts/build.sh
++++ b/scripts/build.sh
+@@ -64,8 +64,8 @@ fi
+ [[ "$SNAPSHOT" == "true" ]] && VERSION=$VERSION-SNAPSHOT
+ [ -z "$OUTPUT" ] && OUTPUT=artifacts
+ 
+-./gradlew build -x test -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+-./gradlew publishShadowPublicationToMavenLocal -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+-./gradlew publishShadowPublicationToStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
++./gradlew --console=plain build -x test -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
++./gradlew --console=plain publishShadowPublicationToMavenLocal -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
++./gradlew --console=plain publishShadowPublicationToStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+ mkdir -p $OUTPUT/maven/org/opensearch
+ cp -r ./build/local-staging-repo/org/opensearch/. $OUTPUT/maven/org/opensearch
+
+# Made with Bob

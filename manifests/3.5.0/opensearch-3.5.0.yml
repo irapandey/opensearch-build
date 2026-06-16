@@ -21,11 +21,11 @@ ci:
         args: -e JAVA_HOME=/opt/java/openjdk-25
 components:
   - name: OpenSearch
-    repository: https://github.com/opensearch-project/OpenSearch.git
-    ref: tags/3.5.0
+    repository: https://github.com/irapandey/OpenSearch.git
+    ref: ppc64le
   - name: common-utils
-    repository: https://github.com/opensearch-project/common-utils.git
-    ref: tags/3.5.0.0
+    repository: https://github.com/irapandey/common-utils.git
+    ref: branch-3.5.0.0
     platforms:
       - linux
       - windows
@@ -42,8 +42,8 @@ components:
       - linux
       - windows
   - name: job-scheduler
-    repository: https://github.com/opensearch-project/job-scheduler.git
-    ref: tags/3.5.0.0
+    repository: https://github.com/irapandey/job-scheduler.git
+    ref: branch-3.5.0.0
     platforms:
       - linux
       - windows

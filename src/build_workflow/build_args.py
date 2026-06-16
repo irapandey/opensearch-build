@@ -16,6 +16,7 @@ class BuildArgs:
     SUPPORTED_ARCHITECTURES = [
         "x64",
         "arm64",
+        "ppc64le"
     ]
     SUPPORTED_DISTRIBUTIONS = ["tar", "zip", "rpm", "deb"]
 

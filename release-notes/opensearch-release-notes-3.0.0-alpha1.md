@@ -703,7 +703,7 @@ OpenSearch Dashboards [Release Notes](https://github.com/opensearch-project/Open
 * Removes Array based vector serialization ([#2587](https://github.com/opensearch-project/k-NN/pull/2587))
 * Enabled indices.breaker.total.use\_real\_memory setting via build.gradle for integTest Cluster to catch heap CB in local ITs and github CI actions ([#2395](https://github.com/opensearch-project/k-NN/pull/2395/))
 * Fixing Lucene912Codec Issue with BWC for Lucene 10.0.1 upgrade ([#2429](https://github.com/opensearch-project/k-NN/pull/2429))
-* Enabled idempotency of local builds when using `./gradlew clean` and nest `jni/release` directory under `jni/build` for easier cleanup ([#2516](https://github.com/opensearch-project/k-NN/pull/2516))
+* Enabled idempotency of local builds when using `./gradlew --console=plain clean` and nest `jni/release` directory under `jni/build` for easier cleanup ([#2516](https://github.com/opensearch-project/k-NN/pull/2516))
 
 
 ### OpenSearch SQL
