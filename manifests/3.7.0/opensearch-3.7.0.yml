@@ -29,7 +29,6 @@ components:
     platforms:
       - linux
       - windows
-      - ppc64le
   - name: opensearch-learning-to-rank-base
     repository: https://github.com/opensearch-project/opensearch-learning-to-rank-base.git
     ref: tags/3.7.0.0
