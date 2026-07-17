@@ -1,0 +1,32 @@
+---
+name: build-opensearch-ppc64le
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --tag opensearch-build:3.7.0-ppc64le .
+
+      - name: Run OpenSearch build
+        run: |
+          mkdir -p artifacts
+          docker run --rm \
+            -v "${{ github.workspace }}/artifacts:/opensearch-build/tar" \
+            opensearch-build:3.7.0-ppc64le \
+            ./build.sh manifests/3.7.0/opensearch-3.7.0.yml -a ppc64le --continue-on-error
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opensearch-3.7.0-ppc64le
+          path: artifacts/builds/opensearch/
+          if-no-files-found: warn
+          retention-days: 30
