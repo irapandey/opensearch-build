@@ -14,7 +14,7 @@ class CiCheckGradlePublishToMavenLocal(CiCheckSource):
             filter(
                 None,
                 [
-                    "./gradlew publishToMavenLocal",
+                    "./gradlew --console=plain publishToMavenLocal",
                     f"-Dopensearch.version={self.target.opensearch_version}",
                     f"-Dbuild.snapshot={str(self.target.snapshot).lower()}",
                     f"-Dbuild.version_qualifier={str(self.target.qualifier)}" if self.target.qualifier else None,

@@ -42,16 +42,16 @@ class TestComponentOpenSearch(unittest.TestCase):
         )
 
     def test_gradle_cmd_target(self) -> None:
-        self.assertEqual(ComponentOpenSearch.gradle_cmd("properties"), "./gradlew properties")
+        self.assertEqual(ComponentOpenSearch.gradle_cmd("properties"), "./gradlew --console=plain properties")
 
     def test_gradle_cmd_prop(self) -> None:
         self.assertEqual(
             ComponentOpenSearch.gradle_cmd("properties", {"build.snapshot": "false"}),
-            "./gradlew properties -Dbuild.snapshot=false",
+            "./gradlew --console=plain properties -Dbuild.snapshot=false",
         )
 
     def test_gradle_cmd_props(self) -> None:
         self.assertEqual(
             ComponentOpenSearch.gradle_cmd("properties", {"build.snapshot": "false", "opensearch.version": "1.0"}),
-            "./gradlew properties -Dbuild.snapshot=false -Dopensearch.version=1.0",
+            "./gradlew --console=plain properties -Dbuild.snapshot=false -Dopensearch.version=1.0",
         )

@@ -35,4 +35,4 @@ while getopts ":h" arg; do
     esac
 done
 
-./gradlew bwcTestSuite -Dtests.security.manager=false -PcustomDistributionDownloadType=bundle
+./gradlew --console=plain bwcTestSuite -Dtests.security.manager=false -PcustomDistributionDownloadType=bundle
