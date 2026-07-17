@@ -6,6 +6,7 @@
 # compatible open source license.
 
 import os
+import logging
 
 from build_workflow.build_recorder import BuildRecorder
 from build_workflow.builder import Builder
@@ -27,6 +28,77 @@ class BuilderFromSource(Builder):
             os.path.join(work_dir, self.component.name),
             self.component.working_directory,
         )
+        self._apply_ppc64le_gradle_fix()
+        self._apply_kotlin_version_fix()
+
+    def _apply_ppc64le_gradle_fix(self) -> None:
+        """
+        Apply ppc64le architecture fix for Gradle builds.
+        Creates gradle.properties to disable native platform support which doesn't work on ppc64le.
+        """
+        gradle_properties_path = os.path.join(self.git_repo.working_directory, "gradle.properties")
+
+        # Check if this is a Gradle project (has gradlew or build.gradle)
+        has_gradlew = os.path.isfile(os.path.join(self.git_repo.working_directory, "gradlew"))
+        has_build_gradle = os.path.isfile(os.path.join(self.git_repo.working_directory, "build.gradle"))
+
+        if not (has_gradlew or has_build_gradle):
+            logging.debug(f"Skipping ppc64le Gradle fix for {self.component.name} - not a Gradle project")
+            return
+
+        gradle_properties_content = """# Disable native platform support for ppc64le architecture compatibility
+        # The native-platform library doesn't support ppc64le, so we fall back to pure Java implementations
+        org.gradle.native=false
+        # Use plain console output (no rich formatting that requires native platform)
+        org.gradle.console=plain
+        """
+
+        # If gradle.properties already exists, append our settings
+        if os.path.isfile(gradle_properties_path):
+            logging.info(f"Appending ppc64le fix to existing gradle.properties for {self.component.name}")
+            with open(gradle_properties_path, 'a') as f:
+                f.write("\n" + gradle_properties_content)
+        else:
+            logging.info(f"Creating gradle.properties with ppc64le fix for {self.component.name}")
+            with open(gradle_properties_path, 'w') as f:
+                f.write(gradle_properties_content)
+
+    def _apply_kotlin_version_fix(self) -> None:
+        """
+        Update Kotlin version from 2.2.0 to 2.2.20 in build.gradle for specific plugins.
+        Only applies to plugins that use Kotlin and need the version update.
+        """
+        # List of plugins that need Kotlin version update
+        KOTLIN_PLUGINS = ['k-NN', 'cross-cluster-replication', 'opensearch-observability',
+                         'opensearch-reports', 'alerting', 'index-management']
+
+        if self.component.name not in KOTLIN_PLUGINS:
+            logging.debug(f"Skipping Kotlin version fix for {self.component.name} - not in Kotlin plugins list")
+            return
+
+        build_gradle_path = os.path.join(self.git_repo.working_directory, "build.gradle")
+
+        if not os.path.isfile(build_gradle_path):
+            logging.warning(f"build.gradle not found for {self.component.name} at {build_gradle_path}")
+            return
+
+        # Read the current build.gradle content
+        with open(build_gradle_path, 'r') as f:
+            content = f.read()
+
+        # Check if Kotlin 2.2.0 is present
+        if '2.2.0' not in content:
+            logging.debug(f"Kotlin version 2.2.0 not found in build.gradle for {self.component.name}")
+            return
+
+        # Replace Kotlin version 2.2.0 with 2.2.20
+        updated_content = content.replace('2.2.0', '2.2.20')
+
+        # Write the updated content back
+        with open(build_gradle_path, 'w') as f:
+            f.write(updated_content)
+
+        logging.info(f"Updated Kotlin version from 2.2.0 to 2.2.20 in build.gradle for {self.component.name}")
 
     def build(self, build_recorder: BuildRecorder) -> None:
 
