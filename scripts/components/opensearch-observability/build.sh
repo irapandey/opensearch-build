@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Copyright OpenSearch Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# The OpenSearch Contributors require contributions made to
+# this file be licensed under the Apache-2.0 license or a
+# compatible open source source license.
+#
+# opensearch-observability ships LICENSE and NOTICE without a .txt extension,
+# but OpenSearch 3.x build-tools opensearchplugin validation requires LICENSE.txt
+# and NOTICE.txt. Create symlinks before invoking Gradle so the validator passes.
+# Ref: https://github.com/opensearch-project/observability/blob/3.7.0.0/build.gradle#L109-L110
+
+set -ex
+
+function usage() {
+    echo "Usage: $0 [args]"
+    echo ""
+    echo "Arguments:"
+    echo -e "-v VERSION\t[Required] OpenSearch version."
+    echo -e "-q QUALIFIER\t[Optional] Version qualifier."
+    echo -e "-s SNAPSHOT\t[Optional] Build a snapshot, default is 'false'."
+    echo -e "-p PLATFORM\t[Optional] Platform, ignored."
+    echo -e "-a ARCHITECTURE\t[Optional] Build architecture, ignored."
+    echo -e "-o OUTPUT\t[Optional] Output path, default is 'artifacts'."
+    echo -e "-h help"
+}
+
+while getopts ":h:v:q:s:o:p:a:" arg; do
+    case $arg in
+        h)
+            usage
+            exit 1
+            ;;
+        v)
+            VERSION=$OPTARG
+            ;;
+        q)
+            QUALIFIER=$OPTARG
+            ;;
+        s)
+            SNAPSHOT=$OPTARG
+            ;;
+        o)
+            OUTPUT=$OPTARG
+            ;;
+        p)
+            PLATFORM=$OPTARG
+            ;;
+        a)
+            ARCHITECTURE=$OPTARG
+            ;;
+        :)
+            echo "Error: -${OPTARG} requires an argument"
+            usage
+            exit 1
+            ;;
+        ?)
+            echo "Invalid option: -${arg}"
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$VERSION" ]; then
+    echo "Error: You must specify the OpenSearch version"
+    usage
+    exit 1
+fi
+
+[[ ! -z "$QUALIFIER" ]] && VERSION=$VERSION-$QUALIFIER
+[[ "$SNAPSHOT" == "true" ]] && VERSION=$VERSION-SNAPSHOT
+[ -z "$OUTPUT" ] && OUTPUT=artifacts
+
+mkdir -p $OUTPUT
+
+# OpenSearch 3.x build-tools requires LICENSE.txt and NOTICE.txt.
+# The repository only has extensionless LICENSE and NOTICE files.
+[ -f LICENSE ] && [ ! -f LICENSE.txt ] && ln -s LICENSE LICENSE.txt
+[ -f NOTICE ]  && [ ! -f NOTICE.txt ]  && ln -s NOTICE  NOTICE.txt
+
+./gradlew assemble --no-daemon --refresh-dependencies -DskipTests=true -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+
+zipPath=$(find . -path \*build/distributions/*.zip)
+distributions="$(dirname "${zipPath}")"
+
+echo "COPY ${distributions}/*.zip"
+mkdir -p $OUTPUT/plugins
+cp ${distributions}/*.zip ./$OUTPUT/plugins
+
+./gradlew publishPluginZipPublicationToZipStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+mkdir -p $OUTPUT/maven/org/opensearch
+cp -r ./build/local-staging-repo/org/opensearch/. $OUTPUT/maven/org/opensearch
