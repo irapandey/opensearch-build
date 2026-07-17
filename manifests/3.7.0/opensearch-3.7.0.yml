@@ -24,11 +24,12 @@ components:
     repository: https://github.com/opensearch-project/OpenSearch.git
     ref: tags/3.7.0
   - name: common-utils
-    repository: https://github.com/opensearch-project/common-utils.git
-    ref: tags/3.7.0.0
+    repository: https://github.com/irapandey/common-utils.git
+    ref: ppc64le-3.7.0.0
     platforms:
       - linux
       - windows
+      - ppc64le
   - name: opensearch-learning-to-rank-base
     repository: https://github.com/opensearch-project/opensearch-learning-to-rank-base.git
     ref: tags/3.7.0.0
