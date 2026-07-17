@@ -70,15 +70,20 @@ CMD ["/bin/bash"]
 # Build the image:
 #   docker build -t opensearch-build:3.7.0-ppc64le .
 #
-# Run the full build (all plugins):
+# Run the full build (all plugins, continue past individual failures):
 #   docker run --rm -v $(pwd)/artifacts:/opensearch-build/tar opensearch-build:3.7.0-ppc64le \
-#     ./build.sh manifests/3.7.0/opensearch-3.7.0.yml
+#     ./build.sh manifests/3.7.0/opensearch-3.7.0.yml -a ppc64le --continue-on-error
+#
+# Output on the host after the run:
+#   ./artifacts/builds/opensearch/plugins/*.zip   <- plugin zip files
+#   ./artifacts/builds/opensearch/maven/          <- Maven artifacts
+#   ./artifacts/builds/opensearch/manifest.yml    <- build manifest (lists every artifact + git sha)
 #
 # Build a single component:
-#   docker run --rm opensearch-build:3.7.0-ppc64le \
-#     ./build.sh manifests/3.7.0/opensearch-3.7.0.yml --component OpenSearch
+#   docker run --rm -v $(pwd)/artifacts:/opensearch-build/tar opensearch-build:3.7.0-ppc64le \
+#     ./build.sh manifests/3.7.0/opensearch-3.7.0.yml -a ppc64le --component cross-cluster-replication
 #
-# Interactive mode:
+# Interactive mode (inspect output without removing the container):
 #   docker run -it --rm opensearch-build:3.7.0-ppc64le
 
 # Made with Bob
