@@ -20,7 +20,8 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}/artifacts:/opensearch-build/tar" \
             opensearch-build:3.7.0-ppc64le \
-            ./build.sh manifests/3.7.0/opensearch-3.7.0.yml -a ppc64le --continue-on-error
+            ./build.sh manifests/3.7.0/opensearch-3.7.0.yml -a ppc64le --continue-on-error \
+            ./assemble.sh tar/builds/opensearch/manifest.yml
 
       - name: Upload artifacts
         if: always()
