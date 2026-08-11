@@ -947,7 +947,7 @@ OpenSearch Dashboards [Release Notes](https://github.com/opensearch-project/Open
 ### Opensearch Performance Analyzer
 
 
-* Increment to 3.3.0.0 and run ./gradlew updateSHAs and check in latest sha files ([#846](https://github.com/opensearch-project/performance-analyzer/pull/846))
+* Increment to 3.3.0.0 and run ./gradlew --console=plain updateSHAs and check in latest sha files ([#846](https://github.com/opensearch-project/performance-analyzer/pull/846))
 
 
 ### Opensearch Query Insights

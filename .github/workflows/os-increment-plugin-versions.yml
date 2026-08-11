@@ -99,7 +99,7 @@ jobs:
             echo "The gradle path is ${{ matrix.entry.path }}"
             cd ${{ matrix.entry.path }}
           fi
-          ./gradlew updateVersion -DnewVersion=${{ env.OPENSEARCH_VERSION }}
+          ./gradlew --console=plain updateVersion -DnewVersion=${{ env.OPENSEARCH_VERSION }}
       - name: GitHub App token
         id: github_app_token
         uses: tibdex/github-app-token@v1.6.0
