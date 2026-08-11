@@ -20,6 +20,8 @@ Artifacts found in "<build root>/artifacts/<maven|plugins|libs|dist|core-plugins
 """
 
 OPENSEARCH_PATCH_FILE = os.path.join(os.getcwd(), "opensearch.patch")
+SECURITY_PATCH_FILE = os.path.join(os.getcwd(), "security.patch")
+
 
 class BuilderFromSource(Builder):
     def checkout(self, work_dir: str) -> None:
@@ -38,6 +40,15 @@ class BuilderFromSource(Builder):
                 logging.info(f"Successfully applied patch to {self.component.name}")
             else:
                 logging.warning(f"Patch file not found: {OPENSEARCH_PATCH_FILE}")
+
+        # Apply security patch (security.patch) if building security plugin - to fix CVEs
+        if self.component.name == "security":
+            if os.path.isfile(SECURITY_PATCH_FILE):
+                logging.info(f"Applying patch {SECURITY_PATCH_FILE} to {self.component.name}")
+                self.git_repo.execute(f"git apply {SECURITY_PATCH_FILE}")
+                logging.info(f"Successfully applied patch to {self.component.name}")
+            else:
+                logging.warning(f"Patch file not found: {SECURITY_PATCH_FILE}")
 
         self._apply_ppc64le_gradle_fix()
         self._apply_kotlin_version_fix()
