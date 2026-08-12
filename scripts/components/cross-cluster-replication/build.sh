@@ -6,6 +6,11 @@
 # The OpenSearch Contributors require contributions made to
 # this file be licensed under the Apache-2.0 license or a
 # compatible open source license.
+#
+# cross-cluster-replication ships LICENSE and NOTICE without a .txt extension,
+# but OpenSearch 3.x build-tools opensearchplugin validation requires LICENSE.txt
+# and NOTICE.txt. Create symlinks before invoking Gradle so the validator passes.
+# Ref: https://github.com/opensearch-project/cross-cluster-replication/blob/3.7.0.0/build.gradle#L107-L110
 
 set -ex
 
@@ -14,7 +19,7 @@ function usage() {
     echo ""
     echo "Arguments:"
     echo -e "-v VERSION\t[Required] OpenSearch version."
-    echo -e "-q QUALIFIER\t[Optional] Build qualifier."
+    echo -e "-q QUALIFIER\t[Optional] Version qualifier."
     echo -e "-s SNAPSHOT\t[Optional] Build a snapshot, default is 'false'."
     echo -e "-p PLATFORM\t[Optional] Platform, ignored."
     echo -e "-a ARCHITECTURE\t[Optional] Build architecture, ignored."
@@ -68,13 +73,22 @@ fi
 [[ "$SNAPSHOT" == "true" ]] && VERSION=$VERSION-SNAPSHOT
 [ -z "$OUTPUT" ] && OUTPUT=artifacts
 
-./gradlew --console=plain assemble --no-daemon --refresh-dependencies -DskipTests=true -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER -Pcrypto.standard=FIPS-140-3
-./gradlew --console=plain publishToMavenLocal -PexcludeTests="**/SesChannelIT*" -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER -Pcrypto.standard=FIPS-140-3
+mkdir -p $OUTPUT
 
-mkdir -p ./$OUTPUT/plugins
-notifCoreZipPath=$(ls core/build/distributions/ | grep .zip)
-cp -v core/build/distributions/$notifCoreZipPath ./$OUTPUT/plugins
+# OpenSearch 3.x build-tools requires LICENSE.txt and NOTICE.txt.
+# The repository only has extensionless LICENSE and NOTICE files.
+[ -f LICENSE ] && [ ! -f LICENSE.txt ] && ln -s LICENSE LICENSE.txt
+[ -f NOTICE ]  && [ ! -f NOTICE.txt ]  && ln -s NOTICE  NOTICE.txt
 
-./gradlew --console=plain publishPluginZipPublicationToZipStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER -Pcrypto.standard=FIPS-140-3
-mkdir -p $OUTPUT/maven/org/opensearch/plugin
-cp -r ./build/local-staging-repo/org/opensearch/plugin/opensearch-notifications-core $OUTPUT/maven/org/opensearch/plugin/
+./gradlew assemble --no-daemon --refresh-dependencies -DskipTests=true -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+
+zipPath=$(find . -path \*build/distributions/*.zip)
+distributions="$(dirname "${zipPath}")"
+
+echo "COPY ${distributions}/*.zip"
+mkdir -p $OUTPUT/plugins
+cp ${distributions}/*.zip ./$OUTPUT/plugins
+
+./gradlew publishPluginZipPublicationToZipStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+mkdir -p $OUTPUT/maven/org/opensearch
+cp -r ./build/local-staging-repo/org/opensearch/. $OUTPUT/maven/org/opensearch

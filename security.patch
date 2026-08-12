@@ -1,0 +1,30 @@
+diff --git a/build.gradle b/build.gradle
+index 42401ee1..f552e082 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -487,6 +487,7 @@ configurations {
+             force "com.fasterxml.jackson.core:jackson-databind:${versions.jackson_databind}"
+             force "io.netty:netty-buffer:${versions.netty}"
+             force "io.netty:netty-codec-base:${versions.netty}"
++            force "io.netty:netty-codec-compression:${versions.netty}"
+             force "io.netty:netty-codec-http:${versions.netty}"
+             force "io.netty:netty-codec-http2:${versions.netty}"
+             force "io.netty:netty-codec-http3:${versions.netty}"
+diff --git a/libs/opensaml/build.gradle b/libs/opensaml/build.gradle
+index 49affbb4..77210e79 100644
+--- a/libs/opensaml/build.gradle
++++ b/libs/opensaml/build.gradle
+@@ -26,6 +26,10 @@ configurations.all {
+         force "org.bouncycastle:bcprov-jdk18on:1.84"
+         force "org.apache.commons:commons-lang3:${versions.commonslang}"
+         force "tools.jackson.core:jackson-core:${versions.jackson3}"
++        force "com.fasterxml.jackson.core:jackson-core:${versions.jackson}"
++        force "com.fasterxml.jackson.core:jackson-databind:${versions.jackson_databind}"
++        force "org.apache.httpcomponents.core5:httpcore5:${versions.httpcore5}"
++        force "org.apache.httpcomponents.core5:httpcore5-h2:${versions.httpcore5}"
+     }
+ }
+ 
+-- 
+2.51.2
+
