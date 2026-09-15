@@ -24,7 +24,7 @@ class CiCheckGradleProperties(CiCheckSource):
             filter(
                 None,
                 [
-                    "./gradlew properties",
+                    "./gradlew --console=plain properties",
                     f"-Dopensearch.version={self.target.opensearch_version}",
                     f"-Dbuild.snapshot={str(self.target.snapshot).lower()}",
                     f"-Dbuild.version_qualifier={str(self.target.qualifier)}" if self.target.qualifier else None,

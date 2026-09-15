@@ -67,15 +67,25 @@ fi
 [[ ! -z "$QUALIFIER" ]] && VERSION=$VERSION-$QUALIFIER
 [[ "$SNAPSHOT" == "true" ]] && VERSION=$VERSION-SNAPSHOT
 [ -z "$OUTPUT" ] && OUTPUT=artifacts
+[ -z "$ARCHITECTURE" ] && ARCHITECTURE=`uname -m`
 
-./gradlew assemble --no-daemon --refresh-dependencies -DskipTests=true -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
-./gradlew publishToMavenLocal -PexcludeTests="**/SesChannelIT*" -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+# On ppc64le, the kernel thread limit is tighter than on x86_64/arm64.
+# Gradle's default worker count (= CPU cores) combined with JVM GC threads
+# exhausts pthread resources, causing "pthread_create failed (EAGAIN)" and
+# preventing subprocesses such as javadoc from starting.  Cap workers to 4
+# to stay well within the limit on constrained ppc64le CI runners.
+if [ "$ARCHITECTURE" = "ppc64le" ]; then
+    export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.workers.max=4"
+fi
+
+./gradlew --console=plain assemble --no-daemon --refresh-dependencies -DskipTests=true -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+./gradlew --console=plain publishToMavenLocal -PexcludeTests="**/SesChannelIT*" -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
 
 mkdir -p ./$OUTPUT/plugins
 
 notifCoreZipPath=$(ls notifications/build/distributions/ | grep .zip)
 cp -v notifications/build/distributions/$notifCoreZipPath ./$OUTPUT/plugins
 
-./gradlew publishPluginZipPublicationToZipStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
+./gradlew --console=plain publishPluginZipPublicationToZipStagingRepository -Dopensearch.version=$VERSION -Dbuild.snapshot=$SNAPSHOT -Dbuild.version_qualifier=$QUALIFIER
 mkdir -p $OUTPUT/maven/org/opensearch/plugin
 cp -r ./build/local-staging-repo/org/opensearch/plugin/notifications $OUTPUT/maven/org/opensearch/plugin/

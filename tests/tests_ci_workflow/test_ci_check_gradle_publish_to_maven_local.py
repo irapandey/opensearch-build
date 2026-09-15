@@ -21,7 +21,7 @@ class TestCiCheckGradlePublishToMavenLocal(unittest.TestCase):
         )
         check.check()
         exec_command = unittest.mock.create_autospec(check.git_repo.execute)
-        exec_command.assert_called_once_with("./gradlew publishToMavenLocal -Dopensearch.version=1.1.0 -Dbuild.snapshot=false")
+        exec_command.assert_called_once_with("./gradlew --console=plain publishToMavenLocal -Dopensearch.version=1.1.0 -Dbuild.snapshot=false")
 
     def test_executes_gradle_command_snapshot(self) -> None:
         check = CiCheckGradlePublishToMavenLocal(
@@ -31,7 +31,7 @@ class TestCiCheckGradlePublishToMavenLocal(unittest.TestCase):
         )
         check.check()
         exec_command = unittest.mock.create_autospec(check.git_repo.execute)
-        exec_command.assert_called_once_with("./gradlew publishToMavenLocal -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true")
+        exec_command.assert_called_once_with("./gradlew --console=plain publishToMavenLocal -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true")
 
     def test_executes_gradle_command_qualifier_snapshot(self) -> None:
         check = CiCheckGradlePublishToMavenLocal(
@@ -41,4 +41,4 @@ class TestCiCheckGradlePublishToMavenLocal(unittest.TestCase):
         )
         check.check()
         exec_command = unittest.mock.create_autospec(check.git_repo.execute)
-        exec_command.assert_called_once_with("./gradlew publishToMavenLocal -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1")
+        exec_command.assert_called_once_with("./gradlew --console=plain publishToMavenLocal -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1")

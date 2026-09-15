@@ -1,0 +1,21 @@
+diff --git a/build.gradle b/build.gradle
+index 54740d0a..4a87e896 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -219,6 +219,15 @@ def getBreakerSetting() {
+ 
+ allprojects {
+ 
++    configurations.all {
++        resolutionStrategy {
++            force "org.apache.httpcomponents.client5:httpclient5:${versions.httpclient5}"
++            force "org.apache.httpcomponents.core5:httpcore5:${versions.httpcore5}"
++            force "org.apache.httpcomponents.core5:httpcore5-h2:${versions.httpcore5}"
++            force "org.apache.httpcomponents.core5:httpcore5-reactive:${versions.httpcore5}"
++        }
++    }
++
+     group = 'org.opensearch'
+     version = opensearch_version.tokenize('-')[0] + '.0'
+     if (version_qualifier) {
+

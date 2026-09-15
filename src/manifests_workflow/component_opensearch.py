@@ -64,6 +64,6 @@ class ComponentOpenSearch(Component):
 
     @classmethod
     def gradle_cmd(self, target: str, props: dict = {}) -> str:
-        cmd = [f"./gradlew {target}"]
+        cmd = [f"./gradlew --console=plain {target}"]
         cmd.extend([f"-D{k}={v}" for k, v in props.items()])
         return " ".join(cmd)

@@ -5,12 +5,24 @@
 # this file be licensed under the Apache-2.0 license or a
 # compatible open source license.
 
+import glob
+import logging
 import os
 
 from build_workflow.build_recorder import BuildRecorder
 from build_workflow.builder import Builder
 from git.git_repository import GitRepository
 from paths.script_finder import ScriptFinder
+
+# Resolve patch file paths as absolute paths relative to the repo root (two levels up from this
+# source file: src/build_workflow/ -> src/ -> repo root).  Using absolute paths ensures that
+# both os.path.isfile() and `git apply` work correctly regardless of the process's current
+# working directory, which changes to a temp dir early in run_build.py via chdir=True.
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+OPENSEARCH_PATCH_FILE = os.path.join(_REPO_ROOT, "opensearch.patch")
+COMMON_UTILS_PATCH_FILE = os.path.join(_REPO_ROOT, "common-utils.patch")
+KNN_PATCH_FILE = os.path.join(_REPO_ROOT, "knn.patch")
+SECURITY_PATCH_FILE = os.path.join(_REPO_ROOT, "security.patch")
 
 """
 This class is responsible for executing the build for a component and passing the results to a build recorder.
@@ -27,7 +39,113 @@ class BuilderFromSource(Builder):
             os.path.join(work_dir, self.component.name),
             self.component.working_directory,
         )
+        
+        # Apply OpenSearch patch if building OpenSearch
+        if self.component.name == "OpenSearch":
+            if os.path.isfile(OPENSEARCH_PATCH_FILE):
+                logging.info(f"Applying patch {OPENSEARCH_PATCH_FILE} to {self.component.name}")
+                self.git_repo.execute(f"git apply {OPENSEARCH_PATCH_FILE}")
+                logging.info(f"Successfully applied patch to {self.component.name}")
+            else:
+                logging.warning(f"Patch file not found: {OPENSEARCH_PATCH_FILE}")
+        
+        # Apply common-utils patch if building common-utils
+        if self.component.name == "common-utils":
+            if os.path.isfile(COMMON_UTILS_PATCH_FILE):
+                logging.info(f"Applying patch {COMMON_UTILS_PATCH_FILE} to {self.component.name}")
+                self.git_repo.execute(f"git apply {COMMON_UTILS_PATCH_FILE}")
+                logging.info(f"Successfully applied patch to {self.component.name}")
+            else:
+                logging.warning(f"Patch file not found: {COMMON_UTILS_PATCH_FILE}")
 
+        # Apply k-NN patch if building k-NN
+        if self.component.name == "k-NN":
+            if os.path.isfile(KNN_PATCH_FILE):
+                logging.info(f"Applying patch {KNN_PATCH_FILE} to {self.component.name}")
+                self.git_repo.execute(f"git apply {KNN_PATCH_FILE}")
+                logging.info(f"Successfully applied patch to {self.component.name}")
+            else:
+                logging.warning(f"Patch file not found: {KNN_PATCH_FILE}")
+
+        # Apply security patch if building security
+        if self.component.name == "security":
+            if os.path.isfile(SECURITY_PATCH_FILE):
+                logging.info(f"Applying patch {SECURITY_PATCH_FILE} to {self.component.name}")
+                self.git_repo.execute(f"git apply {SECURITY_PATCH_FILE}")
+                logging.info(f"Successfully applied patch to {self.component.name}")
+            else:
+                logging.warning(f"Patch file not found: {SECURITY_PATCH_FILE}")
+
+        # Apply ppc64le fix for all Gradle-based components
+        self._apply_ppc64le_gradle_fix()
+    
+    def _apply_ppc64le_gradle_fix(self) -> None:
+        """
+        Apply ppc64le architecture fix for Gradle builds.
+
+        Two parts:
+        1. gradle.properties – disables native-platform and rich console output.
+        2. ~/.gradle/init.d/ppc64le-kotlin-fix.gradle – an init script that spoofs
+           os.arch to x86_64 before plugin classloading occurs.  This is the only
+           reliable fix for the Kotlin 2.x crash: NativeCompilerDownloader.<clinit>
+           calls HostManager.hostArch() at configuration time and throws
+           TargetSupportException: Unknown hardware platform: ppc64le before any
+           gradle.properties value is ever read.  The init script condition means it
+           is a no-op on all non-ppc64le hosts.
+        """
+        gradle_properties_path = os.path.join(self.git_repo.working_directory, "gradle.properties")
+
+        # Check if this is a Gradle project (has gradlew or build.gradle)
+        has_gradlew = os.path.isfile(os.path.join(self.git_repo.working_directory, "gradlew"))
+        has_build_gradle = os.path.isfile(os.path.join(self.git_repo.working_directory, "build.gradle"))
+
+        if not (has_gradlew or has_build_gradle):
+            logging.debug(f"Skipping ppc64le Gradle fix for {self.component.name} - not a Gradle project")
+            return
+
+        gradle_properties_content = """# Disable native platform support for ppc64le architecture compatibility
+# The native-platform library doesn't support ppc64le, so we fall back to pure Java implementations
+org.gradle.native=false
+
+# Use plain console output (no rich formatting that requires native platform)
+org.gradle.console=plain
+"""
+
+        # If gradle.properties already exists, append our settings
+        if os.path.isfile(gradle_properties_path):
+            logging.info(f"Appending ppc64le fix to existing gradle.properties for {self.component.name}")
+            with open(gradle_properties_path, 'a') as f:
+                f.write("\n" + gradle_properties_content)
+        else:
+            logging.info(f"Creating gradle.properties with ppc64le fix for {self.component.name}")
+            with open(gradle_properties_path, 'w') as f:
+                f.write(gradle_properties_content)
+
+        # The Kotlin 2.x NativeCompilerDownloader.<clinit> crash on ppc64le
+        # affects any component that uses Kotlin 2.x (e.g. cross-cluster-replication,
+        # opensearch-observability).  Install a Gradle init script that spoofs
+        # os.arch to x86_64 before plugin classloading occurs — this is the only
+        # fix that works because the crash happens before any gradle.properties
+        # value is ever read.  The condition in the script makes it a no-op on
+        # non-ppc64le hosts so it is safe to install for all Kotlin-using components.
+        KOTLIN_COMPONENTS = {"cross-cluster-replication", "opensearch-observability"}
+        if self.component.name in KOTLIN_COMPONENTS:
+            gradle_init_d = os.path.join(os.path.expanduser("~"), ".gradle", "init.d")
+            os.makedirs(gradle_init_d, exist_ok=True)
+            init_script_path = os.path.join(gradle_init_d, "ppc64le-kotlin-fix.gradle")
+            init_script_content = """\
+// Spoof os.arch to x86_64 on ppc64le hosts so that the Kotlin 2.x Gradle plugin
+// does not crash during static class initialisation (NativeCompilerDownloader.<clinit>
+// calls HostManager.hostArch() which throws TargetSupportException for unknown
+// hardware platforms).  The condition makes this a no-op on all other architectures.
+if (System.getProperty("os.arch") == "ppc64le") {
+    System.setProperty("os.arch", "x86_64")
+}
+"""
+            logging.info(f"Writing Gradle init script for ppc64le Kotlin fix: {init_script_path}")
+            with open(init_script_path, 'w') as f:
+                f.write(init_script_content)
+    
     def build(self, build_recorder: BuildRecorder) -> None:
 
         # List of components whose build scripts support `-d` parameter
@@ -53,7 +171,7 @@ class BuilderFromSource(Builder):
             )
         )
 
-        self.git_repo.execute(build_command)
+        self.git_repo.execute(build_command)        
         build_recorder.record_component(self.component.name, self.git_repo)
 
     def export_artifacts(self, build_recorder: BuildRecorder) -> None:

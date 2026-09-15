@@ -27,7 +27,7 @@ class CiCheckGradleDependencies(CiCheckSource):
             filter(
                 None,
                 [
-                    f"./gradlew {self.gradle_project or ''}:dependencies",
+                    f"./gradlew --console=plain {self.gradle_project or ''}:dependencies",
                     f"-Dopensearch.version={self.target.opensearch_version}",
                     f"-Dbuild.snapshot={str(self.target.snapshot).lower()}",
                     f"-Dbuild.version_qualifier={str(self.target.qualifier)}" if self.target.qualifier else None,

@@ -33,34 +33,34 @@ class TestCiCheckGradleDependencies(unittest.TestCase):
     def test_executes_gradle_dependencies(self) -> None:
         check = self.__mock_dependencies()
         output = unittest.mock.create_autospec(check.git_repo.output)
-        output.assert_called_once_with('./gradlew :dependencies -Dopensearch.version=1.1.0 -Dbuild.snapshot=false --configuration compileOnly | grep -e "---"')
+        output.assert_called_once_with('./gradlew --console=plain :dependencies -Dopensearch.version=1.1.0 -Dbuild.snapshot=false --configuration compileOnly | grep -e "---"')
 
     def test_executes_gradle_dependencies_snapshot(self) -> None:
         check = self.__mock_dependencies(snapshot=True)
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew :dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain :dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_dependencies_qualifier_snapshot(self) -> None:
         check = self.__mock_dependencies(qualifier="alpha1", snapshot=True)
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew :dependencies -Dopensearch.version=1.1.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain :dependencies -Dopensearch.version=1.1.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_dependencies_project(self) -> None:
         check = self.__mock_dependencies(snapshot=True, gradle_project="project")
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew project:dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain project:dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_dependencies_project_qualifier(self) -> None:
         check = self.__mock_dependencies(qualifier="alpha1", snapshot=True, gradle_project="project")
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew project:dependencies -Dopensearch.version=1.1.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain project:dependencies -Dopensearch.version=1.1.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
         )
 
     def test_loads_tree(self) -> None:

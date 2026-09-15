@@ -59,7 +59,7 @@ class TestCiCheckGradleDependenciesOpenSearchVersion(unittest.TestCase):
         )
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew :dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain :dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_command_qualifier(self) -> None:
@@ -71,7 +71,7 @@ class TestCiCheckGradleDependenciesOpenSearchVersion(unittest.TestCase):
         )
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew :dependencies -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain :dependencies -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_command_with_arg(self) -> None:
@@ -83,7 +83,7 @@ class TestCiCheckGradleDependenciesOpenSearchVersion(unittest.TestCase):
         )
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew plugin:dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain plugin:dependencies -Dopensearch.version=1.1.0-SNAPSHOT -Dbuild.snapshot=true --configuration compileOnly | grep -e "---"'
         )
 
     def test_executes_gradle_command_qualifier_with_arg(self) -> None:
@@ -95,5 +95,5 @@ class TestCiCheckGradleDependenciesOpenSearchVersion(unittest.TestCase):
         )
         output = unittest.mock.create_autospec(check.git_repo.output)
         output.assert_called_once_with(
-            './gradlew plugin:dependencies -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
+            './gradlew --console=plain plugin:dependencies -Dopensearch.version=2.0.0-alpha1-SNAPSHOT -Dbuild.snapshot=true -Dbuild.version_qualifier=alpha1 --configuration compileOnly | grep -e "---"'
         )

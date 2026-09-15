@@ -1,0 +1,73 @@
+diff --git a/build.gradle b/build.gradle
+index b1e1ac0..34c406b 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -188,15 +188,12 @@ compileTestKotlin {
+     }
+ }
+ 
+-ext {
+-    licenseFile = rootProject.file('LICENSE')
+-    noticeFile = rootProject.file('NOTICE')
+-}
+-
+ opensearchplugin {
+     name = project.name
+     description = "OpenSearch Cross Cluster Replication Plugin"
+     classname = "org.opensearch.replication.ReplicationPlugin"
++    licenseFile rootProject.file('LICENSE') 
++    noticeFile rootProject.file('NOTICE')
+ }
+ 
+ java {
+diff --git a/gradle.properties b/gradle.properties
+new file mode 100644
+index 0000000..2b62832
+--- /dev/null
++++ b/gradle.properties
+@@ -0,0 +1,6 @@
++# ppc64le: disable native-platform library (no ppc64le binaries available).
++# Falls back to pure Java implementations.
++org.gradle.native=false
++
++# Use plain console output (avoids native terminal formatting requirements).
++org.gradle.console=plain
+diff --git a/init.d/ppc64le-kotlin-fix.gradle b/init.d/ppc64le-kotlin-fix.gradle
+new file mode 100644
+index 0000000..121d0db
+--- /dev/null
++++ b/init.d/ppc64le-kotlin-fix.gradle
+@@ -0,0 +1,30 @@
++/*
++ * SPDX-License-Identifier: Apache-2.0
++ *
++ * ppc64le build fix for Kotlin 2.x Gradle plugin.
++ *
++ * Problem:
++ *   Kotlin 2.x introduces NativeVersionChecker, which triggers a static
++ *   class initialiser in NativeCompilerDownloader at Gradle configuration
++ *   time.  That initialiser calls HostManager.hostArch(), which reads
++ *   System.getProperty("os.arch") and throws:
++ *
++ *     TargetSupportException: Unknown hardware platform: ppc64le
++ *
++ *   This aborts build-script evaluation before the opensearchplugin block
++ *   is even reached, causing a cascade of misleading secondary errors.
++ *
++ * Fix:
++ *   Spoof os.arch to "x86_64" in a Gradle init script so that the property
++ *   is already set before any plugin classloading occurs.  The override has
++ *   no effect on the JVM compilation output — all Kotlin/Java targets remain
++ *   JVM bytecode regardless of the reported host architecture.
++ *
++ * Usage:
++ *   Copy (or symlink) this file to ~/.gradle/init.d/ on any ppc64le build host.
++ *   It is a no-op on x86_64/aarch64 hosts because those values are already
++ *   accepted by HostManager.hostArch().
++ */
++if (System.getProperty("os.arch") == "ppc64le") {
++    System.setProperty("os.arch", "x86_64")
++}
+-- 
+2.51.2
+

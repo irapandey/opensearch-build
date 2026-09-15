@@ -1,0 +1,69 @@
+diff --git a/build.gradle b/build.gradle
+index 0e148a8..58c45f5 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -26,7 +26,7 @@ buildscript {
+ 
+         common_utils_version = System.getProperty("common_utils.version", '3.2.0.0')
+ 
+-        kafka_version  = '4.1.1'
++        kafka_version  = '4.1.2'
+         open_saml_version = '5.1.6'
+         open_saml_shib_version = "9.1.4"
+         one_login_java_saml = '2.9.0'
+@@ -491,6 +491,16 @@ configurations {
+             force "io.netty:netty-handler:${versions.netty}"
+             force "io.netty:netty-transport:${versions.netty}"
+             force "io.netty:netty-transport-native-unix-common:${versions.netty}"
++            // CVE-2026-33870, CVE-2026-33871, CVE-2026-42584, CVE-2026-42587, CVE-2026-55831,
++            // CVE-2026-55833, CVE-2026-56745, CVE-2026-56819 — netty HTTP/HTTP2 codec fixes
++            force "io.netty:netty-codec-http:4.2.16.Final"
++            force "io.netty:netty-codec-http2:4.2.16.Final"
++            // CVE-2026-42582, CVE-2026-44892, CVE-2026-48748, CVE-2026-56816 — netty HTTP3 codec fixes
++            force "io.netty:netty-codec-http3:4.2.16.Final"
++            // CVE-2026-42583, CVE-2026-59901 — netty compression codec fixes
++            force "io.netty:netty-codec-compression:4.2.16.Final"
++            // CVE-2026-44894 — netty QUIC codec fixes
++            force "io.netty:netty-codec-classes-quic:4.2.15.Final"
+             force "com.github.luben:zstd-jni:${versions.zstd}"
+             force "org.xerial.snappy:snappy-java:1.1.10.8"
+             force "com.google.guava:guava:${guava_version}"
+@@ -502,8 +512,9 @@ configurations {
+             force "org.eclipse.platform:org.eclipse.core.runtime:3.34.100"
+             force "org.eclipse.platform:org.eclipse.equinox.common:3.20.300"
+             force "org.apache.httpcomponents.client5:httpclient5:${versions.httpclient5}"
+-            force "org.apache.httpcomponents.core5:httpcore5:${versions.httpcore5}"
+-            force "org.apache.httpcomponents.core5:httpcore5-h2:${versions.httpcore5}"
++            // CVE-2026-54399, CVE-2026-54428 — httpcore5 / httpcore5-h2 fixes
++            force "org.apache.httpcomponents.core5:httpcore5:5.4.3"
++            force "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3"
+             force "org.codehaus.plexus:plexus-utils:3.6.0"
+ 
+             // For integrationTest
+diff --git a/libs/opensaml/build.gradle b/libs/opensaml/build.gradle
+index ef72efb..f4b0448 100644
+--- a/libs/opensaml/build.gradle
++++ b/libs/opensaml/build.gradle
+@@ -31,6 +31,15 @@ configurations.all {
+         force "org.bouncycastle:bcpkix-jdk18on:1.83"
+         force "org.bouncycastle:bcprov-jdk18on:1.83"
+         force "org.apache.commons:commons-lang3:${versions.commonslang}"
++        // CVE-2026-54399, CVE-2026-54428 — httpcore5 / httpcore5-h2 bundled in opensaml shadow jar
++        force "org.apache.httpcomponents.core5:httpcore5:5.4.3"
++        force "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3"
++        // CVE-2026-54512, CVE-2026-54513, GHSA-r7wm-3cxj-wff9 — jackson bundled in opensaml shadow jar
++        // Must match jackson-annotations 2.21 / jackson-databind 2.21.4 used by OpenSearch core to avoid
++        // NoClassDefFoundError: JsonSerializeAs (added in annotations 2.21, required by databind 2.21.x).
++        force "com.fasterxml.jackson.core:jackson-databind:2.21.4"
++        force "com.fasterxml.jackson.core:jackson-core:2.21.4"
++        force "com.fasterxml.jackson.core:jackson-annotations:2.21"
+     }
+ }
+ 
+@@ -81,5 +90,6 @@ tasks.shadowJar {
+     exclude 'META-INF/maven/commons-io/commons-io/**'
+     exclude 'META-INF/maven/org.apache.commons/commons-lang3/**'
+     exclude 'META-INF/versions/**/org/bouncycastle/**'
++    exclude 'META-INF/versions/**/com/**'
+     exclude 'META-INF/services/org.opensaml.security.crypto.ec.NamedCurve'
+ }

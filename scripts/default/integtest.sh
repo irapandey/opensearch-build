@@ -102,4 +102,13 @@ fi
 USERNAME=`echo $CREDENTIAL | awk -F ':' '{print $1}'`
 PASSWORD=`echo $CREDENTIAL | awk -F ':' '{print $2}'`
 
-./gradlew integTest -Dopensearch.version=$OPENSEARCH_VERSION -Dbuild.snapshot=$SNAPSHOT -Dtests.rest.cluster="$BIND_ADDRESS:$BIND_PORT" -Dtests.cluster="$BIND_ADDRESS:$BIND_PORT" -Dtests.clustername="opensearch-integrationtest" -Dhttps=$SECURITY_ENABLED -Duser=$USERNAME -Dpassword=$PASSWORD --console=plain
+# On ppc64le, the kernel thread limit is tighter than on x86_64/arm64.
+# Gradle's default worker count (= CPU cores) combined with JVM GC threads
+# exhausts pthread resources, causing "pthread_create failed (EAGAIN)" and
+# preventing subprocesses such as javadoc from starting.  Cap workers to 4
+# to stay well within the limit on constrained ppc64le CI runners.
+if [ "$(uname -m)" = "ppc64le" ]; then
+    export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.workers.max=4"
+fi
+
+./gradlew --console=plain integTest -Dopensearch.version=$OPENSEARCH_VERSION -Dbuild.snapshot=$SNAPSHOT -Dtests.rest.cluster="$BIND_ADDRESS:$BIND_PORT" -Dtests.cluster="$BIND_ADDRESS:$BIND_PORT" -Dtests.clustername="opensearch-integrationtest" -Dhttps=$SECURITY_ENABLED -Duser=$USERNAME -Dpassword=$PASSWORD --console=plain
